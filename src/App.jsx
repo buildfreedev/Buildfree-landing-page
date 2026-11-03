@@ -71,10 +71,11 @@ function FullSite() {
 /* ===================== Temporary simple site ===================== */
 
 const CONTACT = {
+  name: 'Jaromthiyanesh',
   email: 'buildfreedev@gmail.com',
-  phone: '+91 91501 82615',
-  tel: '+919150182615',
-  address: 'Pandian Street, Velachery, Chennai, Tamil Nadu',
+  phone: '+91 98943 77125',
+  tel: '+919894377125',
+  address: 'Pandian Street, Velachery, Chennai, Tamil Nadu 600042',
 };
 
 const SERVICES = [
@@ -94,7 +95,7 @@ const STEPS = [
 ];
 
 const TERMS = [
-  ['Who we are', <>These terms cover the website and services of buildfree, based at {CONTACT.address}. "We", "us" and "our" mean buildfree. "You" means the person or business using our website or services. By using our website or services, you agree to these terms.</>],
+  ['Who we are', <>These terms cover the website and services of buildfree, run by {CONTACT.name} and based at {CONTACT.address}. "We", "us" and "our" mean buildfree. "You" means the person or business using our website or services. By using our website or services, you agree to these terms.</>],
   ['Our services', <>We provide website design and development, online stores, a content back office, forms, integrations and ongoing support. What we deliver for a project, and when, is set out in the quote or plan you accept.</>],
   ['Quotes and payment', <>Prices are in Indian rupees (₹) and are exclusive of applicable taxes unless stated. For projects we may ask for an advance before work begins, with the balance due before launch. Plans are billed in advance for each billing period. Payments are made through our listed payment methods or payment partners.</>],
   ['Cancellation and refunds', <>You can cancel a plan at any time; it stays active until the end of the period you have paid for, and is not renewed after that. Advances for project work already started are not refundable. If you are charged twice or charged in error, write to us at {CONTACT.email} and we will refund the extra amount to the original payment method within 7 working days of confirming it.</>],
@@ -222,6 +223,7 @@ function TempSite() {
               <p className="tmp-lede">Tell us a little about your business and what you need. We reply within one working day.</p>
             </div>
             <ul className="tmp-ways">
+              <li><small>Name</small><span>{CONTACT.name}</span></li>
               <li><small>Email</small><a href={'mailto:' + CONTACT.email}>{CONTACT.email}</a></li>
               <li><small>Phone</small><a href={'tel:' + CONTACT.tel}>{CONTACT.phone}</a></li>
               <li><small>Address</small><span>{CONTACT.address}</span></li>
@@ -240,6 +242,7 @@ function TempSite() {
               <p>Websites, online stores and back offices for growing businesses.</p>
             </div>
             <address className="tmp-foot-c">
+              <b>{CONTACT.name}</b>
               <a href={'mailto:' + CONTACT.email}>{CONTACT.email}</a>
               <a href={'tel:' + CONTACT.tel}>{CONTACT.phone}</a>
               <span>{CONTACT.address}</span>
@@ -326,6 +329,7 @@ html{scroll-behavior:smooth}
 .tmp-foot .tmp-brand img{filter:brightness(0) invert(1)}
 .tmp-foot-c{font-style:normal;display:grid;gap:8px;font-size:16px}
 .tmp-foot-c a:hover{color:#9fdfe8}
+.tmp-foot-c b{font-weight:600}
 .tmp-foot-c span{color:rgba(255,255,255,.6)}
 .tmp-foot-b{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;margin-top:56px;padding-top:22px;border-top:1px solid rgba(255,255,255,.14);font-size:14px;color:rgba(255,255,255,.55)}
 .tmp-foot-b a:hover{color:#fff}
