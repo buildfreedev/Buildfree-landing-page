@@ -1,0 +1,41 @@
+import { useState } from 'react'
+
+// Sends the "contact-form" form. Each input's `name` must match a field key in BuildFree.
+export default function ContactForm() {
+  const [status, setStatus] = useState('')
+
+  const onSubmit = async (event) => {
+    event.preventDefault()
+    const form = event.target
+    const fields = Object.fromEntries(new FormData(form))
+    setStatus('Sending…')
+    try {
+      const res = await fetch('/api/buildfree?form=contact-form', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fields),
+      })
+      const body = await res.json()
+      if (body.success) form.reset()
+      setStatus(body.success ? 'Thank you! We got your message.' : body.message || 'Something went wrong.')
+    } catch {
+      setStatus('Could not send. Please try again.')
+    }
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="contact">
+      <h2>Contact us</h2>
+      <input name="name" placeholder="Your name" required />
+      <input name="email" type="email" placeholder="Email address" required />
+      <select name="occasion" defaultValue="Birthday">
+        <option>Birthday</option>
+        <option>Wedding</option>
+        <option>Other</option>
+      </select>
+      <textarea name="message" placeholder="Message" rows="4" required />
+      <button type="submit">Send</button>
+      {status && <p>{status}</p>}
+    </form>
+  )
+}

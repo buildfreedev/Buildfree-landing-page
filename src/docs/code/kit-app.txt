@@ -1,0 +1,13 @@
+import Products from './Products'
+import ContactForm from './ContactForm'
+
+export default function App() {
+  return (
+    <main>
+      <h1>My Shop</h1>
+      <p>Everything on this page comes from BuildFree.</p>
+      <Products />
+      <ContactForm />
+    </main>
+  )
+}

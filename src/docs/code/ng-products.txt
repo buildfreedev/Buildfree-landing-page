@@ -1,0 +1,46 @@
+import { Component, inject, signal } from '@angular/core';
+import { BuildFreeService, Entry } from './buildfree.service';
+
+@Component({
+  selector: 'app-products',
+  template: `
+    <h2>Our products</h2>
+    @if (loading()) {
+      <p>Loading products…</p>
+    } @else if (products().length === 0) {
+      <p>No products yet.</p>
+    }
+    <div class="grid">
+      @for (p of products(); track p.recordId) {
+        <div class="card">
+          @if (p.media?.[0]?.url) {
+            <img [src]="p.media![0].url" [alt]="p.data['name']" />
+          }
+          <h3>{{ p.data['name'] }}</h3>
+          <p>₹{{ p.data['price'] }}</p>
+        </div>
+      }
+    </div>
+  `,
+  styles: `
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 12px; }
+    img { width: 100%; border-radius: 8px; }
+  `,
+})
+export class ProductsComponent {
+  products = signal<Entry[]>([]);
+  loading = signal(true);
+
+  constructor() {
+    inject(BuildFreeService)
+      .list('products')
+      .subscribe({
+        next: (res) => {
+          this.products.set(res.data ?? []);
+          this.loading.set(false);
+        },
+        error: () => this.loading.set(false),
+      });
+  }
+}

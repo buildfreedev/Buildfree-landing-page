@@ -1,0 +1,35 @@
+import react from '@vitejs/plugin-react'
+import { defineConfig, loadEnv } from 'vite'
+import handler from './api/buildfree.js'
+
+// Runs the safe helper (api/buildfree.js) on your computer while you build the site.
+// When the site is online, Vercel runs the same file for you, so nothing changes.
+const localHelper = (env) => ({
+  name: 'local-helper',
+  configureServer(server) {
+    process.env.BUILDFREE_URL = env.BUILDFREE_URL
+    process.env.BUILDFREE_KEY = env.BUILDFREE_KEY
+    server.middlewares.use('/api/buildfree', async (req, res) => {
+      let raw = ''
+      for await (const chunk of req) raw += chunk
+      req.query = Object.fromEntries(new URL(req.url, 'http://localhost').searchParams)
+      try {
+        req.body = raw ? JSON.parse(raw) : undefined
+      } catch {
+        req.body = undefined
+      }
+      res.status = (code) => ((res.statusCode = code), res)
+      res.json = (data) => {
+        res.setHeader('Content-Type', 'application/json')
+        res.end(JSON.stringify(data))
+      }
+      handler(req, res)
+    })
+  },
+})
+
+export default defineConfig(({ mode }) => {
+  // '' = also read settings without the VITE_ prefix, so the key is never sent to the browser
+  const env = loadEnv(mode, process.cwd(), '')
+  return { plugins: [react(), localHelper(env)] }
+})

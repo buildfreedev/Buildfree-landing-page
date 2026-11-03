@@ -1,0 +1,5 @@
+# 1. Rename this file to .env (just ".env", nothing before the dot)
+# 2. Paste your own values. Copy the address from the API tab of your BuildFree project.
+#    It ends with /api/v1/public/<your-project-slug>  (no slash at the end)
+BUILDFREE_URL=https://YOUR-BUILDFREE-ADDRESS/api/v1/public/your-project-slug
+BUILDFREE_KEY=paste-your-api-key-here

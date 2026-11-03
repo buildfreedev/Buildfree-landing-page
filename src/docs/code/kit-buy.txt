@@ -1,0 +1,69 @@
+import { useState } from 'react'
+
+// Loads Razorpay's payment window script only when someone clicks Buy
+const loadRazorpay = () =>
+  new Promise((resolve) => {
+    if (window.Razorpay) return resolve(true)
+    const script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.onload = () => resolve(true)
+    script.onerror = () => resolve(false)
+    document.body.appendChild(script)
+  })
+
+// "Buy now": asks for delivery details, then opens Razorpay.
+// The price is NOT sent from here — the safe helper reads it from BuildFree.
+export default function BuyButton({ product }) {
+  const [open, setOpen] = useState(false)
+  const [status, setStatus] = useState('')
+
+  const pay = async (event) => {
+    event.preventDefault()
+    const customer = Object.fromEntries(new FormData(event.target))
+    setStatus('Opening payment…')
+    try {
+      const [ready, res] = await Promise.all([
+        loadRazorpay(),
+        fetch('/api/buildfree?pay=1', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId: product.recordId, qty: 1, customer }),
+        }),
+      ])
+      const payment = await res.json()
+      if (!ready || !payment.success) {
+        setStatus(payment.message || 'Could not open the payment window.')
+        return
+      }
+      setStatus('')
+      new window.Razorpay({
+        key: payment.keyId,
+        order_id: payment.razorpayOrderId,
+        amount: payment.amount,
+        currency: payment.currency,
+        name: 'My Shop',
+        description: product.data.name,
+        prefill: { name: customer.name, email: customer.email, contact: customer.phone },
+        // Lets BuildFree's webhook find the saved order
+        notes: { submissionId: payment.submissionId, buildFreeOrderId: payment.orderId },
+        // This only means the window closed — BuildFree's webhook confirms the real payment
+        handler: () => setStatus('Thank you! Your payment is being confirmed.'),
+      }).open()
+    } catch {
+      setStatus('Something went wrong. Please try again.')
+    }
+  }
+
+  if (!open) return <button onClick={() => setOpen(true)}>Buy now</button>
+
+  return (
+    <form onSubmit={pay} className="buy">
+      <input name="name" placeholder="Your name" required />
+      <input name="email" type="email" placeholder="Email" required />
+      <input name="phone" placeholder="Phone" required />
+      <textarea name="address" placeholder="Delivery address" rows="2" required />
+      <button type="submit">Pay ₹{product.data.price}</button>
+      {status && <p>{status}</p>}
+    </form>
+  )
+}

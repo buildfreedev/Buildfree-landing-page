@@ -1,0 +1,9 @@
+// src/app/app.config.ts — add the two lines marked NEW. Leave everything else as it is.
+import { provideHttpClient } from '@angular/common/http'; // NEW
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideHttpClient(), // NEW
+    // ...the lines that were already here stay
+  ],
+};

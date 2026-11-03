@@ -1,0 +1,86 @@
+// The "safe helper". It runs on the server, never in the visitor's browser,
+// so your BuildFree API key stays secret. The website only ever talks to this file.
+//
+//   GET  /api/buildfree?list=products     -> the entries of a collection
+//   POST /api/buildfree?form=contact-form -> sends a form
+//   POST /api/buildfree?pay=1             -> saves the order, then starts a payment
+
+// Collections the website is allowed to read. Add more names here if you need them.
+const ALLOWED = ['products']
+
+// Talks to BuildFree with your API key
+const send = async (url, options = {}) => {
+  const res = await fetch(url, {
+    ...options,
+    headers: { 'x-api-key': process.env.BUILDFREE_KEY, 'Content-Type': 'application/json' },
+  })
+  return { status: res.status, body: await res.json().catch(() => ({})) }
+}
+
+const base = () => process.env.BUILDFREE_URL
+
+export default async function handler(req, res) {
+  const { list, form, pay } = req.query
+  try {
+    // Read a collection
+    if (req.method === 'GET' && ALLOWED.includes(list)) {
+      const { status, body } = await send(`${base()}/${list}`)
+      return res.status(status).json(body)
+    }
+
+    // Send a form (contact, booking, review…)
+    if (req.method === 'POST' && form) {
+      const { status, body } = await send(`${base()}/forms/${form}/submit`, {
+        method: 'POST',
+        body: JSON.stringify(req.body ?? {}),
+      })
+      return res.status(status).json(body)
+    }
+
+    // Take a payment
+    if (req.method === 'POST' && pay) {
+      const { productId, qty, customer = {} } = req.body ?? {}
+      const quantity = Math.min(Math.max(parseInt(qty, 10) || 1, 1), 99)
+
+      // 1. Look up the real price in BuildFree. Never trust a price sent by the browser.
+      const { body: products } = await send(`${base()}/products`)
+      const product = (products.data ?? []).find((p) => p.recordId === productId)
+      if (!product) return res.status(400).json({ success: false, message: 'Product not found' })
+      const total = (Number(product.data.price) || 0) * quantity
+
+      // 2. Save the order in the "order-form" form. BuildFree gives back a submissionId.
+      const saved = await send(`${base()}/forms/order-form/submit`, {
+        method: 'POST',
+        body: JSON.stringify({
+          name: customer.name,
+          email: customer.email,
+          phone: customer.phone,
+          address: customer.address,
+          product: `${product.data.name} × ${quantity}`,
+          quantity,
+          total,
+        }),
+      })
+      const submissionId = saved.body.submissionId
+      if (!submissionId) {
+        return res.status(502).json({ success: false, message: saved.body.message ?? 'Could not save the order' })
+      }
+
+      // 3. Ask BuildFree to create the payment. The amount is in paise (₹1 = 100 paise).
+      const { body } = await send(`${new URL(base()).origin}/api/v1/order`, {
+        method: 'POST',
+        body: JSON.stringify({ recordId: productId, submissionId, amount: total * 100, currency: 'INR' }),
+      })
+      if (!body.success) {
+        return res.status(502).json({ success: false, message: body.message ?? 'Could not start the payment' })
+      }
+
+      // orderId, razorpayOrderId, amount, currency, keyId
+      return res.status(200).json({ success: true, submissionId, ...body.data })
+    }
+
+    return res.status(404).json({ success: false, message: 'Not found' })
+  } catch {
+    return res.status(502).json({ success: false, message: 'BuildFree is not reachable. Please try again.' })
+  }
+}

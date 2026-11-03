@@ -1,0 +1,33 @@
+import { useEffect, useState } from 'react'
+import BuyButton from './BuyButton'
+
+// Shows the entries of the "products" collection.
+// Each entry looks like: { recordId, data: { name, price, ... }, media: [{ url }] }
+export default function Products() {
+  const [products, setProducts] = useState(null)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    fetch('/api/buildfree?list=products')
+      .then((res) => res.json())
+      .then((body) => setProducts(body.data ?? []))
+      .catch(() => setError('Could not load products.'))
+  }, [])
+
+  if (error) return <p>{error}</p>
+  if (!products) return <p>Loading products…</p>
+  if (products.length === 0) return <p>No products yet. Add entries in BuildFree and publish the collection.</p>
+
+  return (
+    <div className="grid">
+      {products.map((p) => (
+        <div key={p.recordId} className="card">
+          {p.media?.[0]?.url && <img src={p.media[0].url} alt={p.data.name} />}
+          <h3>{p.data.name}</h3>
+          <p className="price">₹{p.data.price}</p>
+          {p.data.in_stock === false ? <p>Out of stock</p> : <BuyButton product={p} />}
+        </div>
+      ))}
+    </div>
+  )
+}

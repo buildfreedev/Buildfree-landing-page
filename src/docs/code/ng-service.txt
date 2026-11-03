@@ -1,0 +1,34 @@
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+
+// 1. PASTE YOUR TWO VALUES HERE ------------------------------
+const BASE = 'https://YOUR-BUILDFREE-API/api/v1/public/your-project-slug';
+const KEY = 'PASTE-YOUR-API-KEY';
+// -------------------------------------------------------------
+
+// One entry of a collection: { recordId, data: { name, price, ... }, media: [{ url }] }
+export interface Entry {
+  recordId: string;
+  data: Record<string, any>;
+  media?: { url: string }[];
+}
+
+@Injectable({ providedIn: 'root' })
+export class BuildFreeService {
+  private http = inject(HttpClient);
+  private headers = new HttpHeaders({ 'x-api-key': KEY });
+
+  // Read a collection, e.g. list('products')
+  list(collection: string) {
+    return this.http.get<{ data: Entry[] }>(`${BASE}/${collection}`, { headers: this.headers });
+  }
+
+  // Send a form, e.g. sendForm('contact-form', { name, email, message })
+  sendForm(form: string, fields: Record<string, unknown>) {
+    return this.http.post<{ success: boolean; message?: string }>(
+      `${BASE}/forms/${form}/submit`,
+      fields,
+      { headers: this.headers },
+    );
+  }
+}

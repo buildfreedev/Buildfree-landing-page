@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Shop</title>
+  <style>
+    body { font-family: sans-serif; max-width: 900px; margin: 0 auto; padding: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 12px; }
+    .card img { width: 100%; border-radius: 8px; }
+    form { display: flex; flex-direction: column; gap: 8px; max-width: 400px; }
+  </style>
+</head>
+<body>
+  <h1>My Shop</h1>
+  <div id="products" class="grid">Loading…</div>
+
+  <h2>Contact us</h2>
+  <form id="contact">
+    <input name="name" placeholder="Your name" required />
+    <input name="email" type="email" placeholder="Email" required />
+    <textarea name="message" placeholder="Message" rows="4" required></textarea>
+    <button>Send</button>
+    <p id="status"></p>
+  </form>
+
+  <script>
+    // 1. PASTE YOUR TWO VALUES HERE ------------------------------
+    const BASE = "https://YOUR-BUILDFREE-API/api/v1/public/your-project-slug";
+    const KEY = "PASTE-YOUR-API-KEY";
+    // -------------------------------------------------------------
+
+    // Show the entries of the "products" collection
+    fetch(BASE + "/products", { headers: { "x-api-key": KEY } })
+      .then((res) => res.json())
+      .then((body) => {
+        const box = document.getElementById("products");
+        const items = body.data || [];
+        box.textContent = items.length ? "" : "No products yet.";
+        items.forEach((item) => {
+          const card = document.createElement("div");
+          card.className = "card";
+          if (item.media && item.media[0]) {
+            const img = document.createElement("img");
+            img.src = item.media[0].url;
+            card.appendChild(img);
+          }
+          const name = document.createElement("h3");
+          name.textContent = item.data.name;
+          const price = document.createElement("p");
+          price.textContent = "₹" + item.data.price;
+          card.append(name, price);
+          box.appendChild(card);
+        });
+      })
+      .catch(() => {
+        document.getElementById("products").textContent = "Could not load products.";
+      });
+
+    // Send the "contact-form" form. Each input's name must match a field key in BuildFree.
+    document.getElementById("contact").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const form = event.target;
+      const status = document.getElementById("status");
+      status.textContent = "Sending…";
+      fetch(BASE + "/forms/contact-form/submit", {
+        method: "POST",
+        headers: { "x-api-key": KEY, "Content-Type": "application/json" },
+        body: JSON.stringify(Object.fromEntries(new FormData(form))),
+      })
+        .then((res) => res.json())
+        .then((body) => {
+          status.textContent = body.success ? "Thank you! We got your message." : body.message || "Something went wrong.";
+          if (body.success) form.reset();
+        })
+        .catch(() => {
+          status.textContent = "Could not send. Please try again.";
+        });
+    });
+  </script>
+</body>
+</html>

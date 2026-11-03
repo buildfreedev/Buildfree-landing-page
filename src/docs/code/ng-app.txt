@@ -1,0 +1,16 @@
+// Your main component file: src/app/app.ts (newer Angular) or src/app/app.component.ts (older).
+// Add the two imports at the top, add the two names to `imports: [...]`,
+// and put the two tags in the template.
+
+import { ProductsComponent } from './products.component';
+import { ContactComponent } from './contact.component';
+
+@Component({
+  selector: 'app-root',
+  imports: [ProductsComponent, ContactComponent],
+  template: `
+    <h1>My Shop</h1>
+    <app-products />
+    <app-contact />
+  `,
+})
