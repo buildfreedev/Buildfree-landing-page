@@ -250,7 +250,7 @@ function TempSite() {
             </address>
           </div>
           <div className="tmp-foot-b">
-            <span>© {new Date().getFullYear()} buildfree. All rights reserved.</span>
+            <span>© {new Date().getFullYear()} buildfree. All rights reserved....</span>
           </div>
         </div>
       </footer>
